@@ -68,3 +68,15 @@ class SolutionTest(unittest.TestCase):
             if runs >= max_runs:
                 self.fail("Too many crossovers without finding all "
                           "offspring.")
+
+    def testMutate(self):
+        self.assertEqual(
+            {self.poorAgent},
+            set(self.goodAgentSolution.mutate(2).assignments))
+
+        self.assertEqual(
+            {self.poorAgent, self.goodAgent},
+            set(self.goodAgentSolution.mutate(1).assignments))
+
+        with self.assertRaises(ValueError):
+            self.goodAgentSolution.mutate(3)
