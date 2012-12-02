@@ -96,6 +96,10 @@ class Solution(object):
 
         return Solution(self.agents, new_assignments)
 
+    @property
+    def satisfies_constraint(self):
+        return not self._get_agents_with_excess_work()
+
     def repair(self):
         excess_or_zero = lambda delta: delta if delta > 0 else 0
         excess_work_agents = self._get_agents_with_excess_work()
@@ -160,3 +164,14 @@ class Solution(object):
                     self._clear_aggregate_info()
 
             excess_work_agents = self._get_agents_with_excess_work()
+
+    @classmethod
+    def generate_random(cls, agents):
+        task_count = len(agents[0].costs)
+        assignments = []
+        for task in xrange(task_count):
+            random_agent = random.choice(agents)
+            assignments.append(random_agent)
+        solution = Solution(agents, assignments)
+        solution.repair()
+        return solution

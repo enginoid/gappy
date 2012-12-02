@@ -99,3 +99,7 @@ class SolutionTest(unittest.TestCase):
         self.poorAgentSolution.repair()
         self.assertEqual([self.poorAgent, self.goodAgent],
                          self.poorAgentSolution.assignments)
+
+    def testGenerateRandom(self):
+        random_solution = Solution.generate_random(self.agents)
+        self.assertTrue(random_solution.satisfies_constraint)
