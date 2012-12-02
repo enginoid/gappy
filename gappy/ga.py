@@ -1,4 +1,5 @@
 from Queue import Queue
+import random
 from gappy.gaplib.base import Agent, Solution
 
 
@@ -11,6 +12,13 @@ class GeneticAlgorithm(object):
         for _ in xrange(population_size):
             solution = Solution.generate_random(self.agents)
             self.solution_pool.append(solution)
+
+    def double_population(self):
+        for _ in xrange(len(self.solution_pool)):
+            parent1 = random.choice(self.solution_pool)
+            parent2 = random.choice(self.solution_pool)
+            child = Solution.cross_over(parent1, parent2)
+            self.solution_pool.append(child)
 
     @classmethod
     def from_file(cls, file_obj):

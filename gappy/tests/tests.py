@@ -4,6 +4,9 @@ from os.path import dirname, join, abspath
 
 
 class TestGeneticAlgorithm(unittest.TestCase):
+    def setUp(self):
+        self.ga = self.get_instance_by_filename('D3-15.dat')
+
     def get_instance_by_filename(self, filename):
         absolute_dir = dirname(abspath(__file__))
         with open(join(absolute_dir, filename), 'r') as f:
@@ -11,8 +14,7 @@ class TestGeneticAlgorithm(unittest.TestCase):
         return ga
 
     def testFromFile(self):
-        ga = self.get_instance_by_filename('D3-15.dat')
-
+        ga = self.ga
         agent = ga.agents[2]
         self.assertEqual(len(ga.agents), 3)
         self.assertEqual(len(agent.costs), 15)
@@ -25,7 +27,10 @@ class TestGeneticAlgorithm(unittest.TestCase):
             self.get_instance_by_filename('D3-15-corrupt.dat')
 
     def testGenerateRandomSolutions(self):
-        ga = self.get_instance_by_filename('D3-15.dat')
-        ga.generate_random_solutions(100)
-        unique_solutions = set(tuple(s.assignments) for s in ga.solution_pool)
-        self.assertLess(1, len(set(unique_solutions)))
+        self.ga.generate_random_solutions(100)
+        self.assertEqual(100, len(self.ga.solution_pool))
+
+    def testAddGeneration(self):
+        self.ga.generate_random_solutions(100)
+        self.ga.double_population()
+        self.assertEqual(200, len(self.ga.solution_pool))
