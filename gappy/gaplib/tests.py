@@ -37,3 +37,10 @@ class SolutionTest(unittest.TestCase):
     def testGetTotalCost(self):
         self.assertEqual(self.goodAgentSolution.total_cost, 4)
         self.assertEqual(self.poorAgentSolution.total_cost, 8)
+
+    def testGetTotalAgentWork(self):
+        self.assertEqual(
+            self.goodAgentSolution.get_total_agent_work(self.goodAgent), 30)
+
+        self.assertEqual(
+            self.goodAgentSolution.get_total_agent_work(self.poorAgent), 0)

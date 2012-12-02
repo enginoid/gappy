@@ -14,3 +14,8 @@ class Solution(object):
     def total_cost(self):
         return sum(self.assignments[i].costs[i]
                    for i in xrange(len(self.assignments)))
+
+    def get_total_agent_work(self, agent):
+        return sum(self.assignments[i].work_units[i]
+                   for i in xrange(len(self.assignments))
+                   if self.assignments[i] == agent)
