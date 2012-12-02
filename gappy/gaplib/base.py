@@ -1,4 +1,3 @@
-from collections import namedtuple
 import random
 
 
@@ -18,7 +17,10 @@ class Agent(object):
 class Solution(object):
     def __init__(self, agents, assignments):
         self.agents = agents
-        self.assignments = assignments
+        self.assignments = list(assignments)
+        self._agent_aggregate_info = None
+
+    def _clear_aggregate_info(self):
         self._agent_aggregate_info = None
 
     def _get_agent_aggregate_info(self):
@@ -37,10 +39,21 @@ class Solution(object):
             self._agent_aggregate_info = aggregates
         return self._agent_aggregate_info
 
+    def _get_agent_excess_work(self, agent):
+        work_total = self._get_agent_aggregate_info()[agent]['work_total']
+        delta = work_total - agent.capacity
+        return delta
+
     def _get_agents_with_excess_work(self):
+        agents = []
         for agent, aggregate_info in self._get_agent_aggregate_info().items():
             if aggregate_info['work_total'] > agent.capacity:
-                yield agent
+                agents.append(agent)
+        return agents
+
+    @property
+    def assignment(self):
+        return self._assignments
 
     @property
     def total_cost(self):
@@ -82,3 +95,68 @@ class Solution(object):
                         break
 
         return Solution(self.agents, new_assignments)
+
+    def repair(self):
+        excess_or_zero = lambda delta: delta if delta > 0 else 0
+        excess_work_agents = self._get_agents_with_excess_work()
+        while excess_work_agents:
+            # Find a random excess agent.
+            excess_agent = random.choice(excess_work_agents)
+
+            # Find a random task for that agent.
+            excess_agent_info = self._get_agent_aggregate_info()[excess_agent]
+            excess_agent_task_indices = excess_agent_info['assignments']
+            excess_agent_task_index = random.choice(excess_agent_task_indices)
+            excess_agent_task_work = (excess_agent
+                                      .work_units[excess_agent_task_index])
+            excess_agent_excess = self._get_agent_excess_work(excess_agent)
+
+            # Create a random swap scenario.
+            swap_agent = random.choice(self.agents)
+            swap_agent_excess = self._get_agent_excess_work(swap_agent)
+            swap_task_index = random.choice(xrange(len(self.assignments)))
+            swap_task_work = swap_agent.work_units[swap_task_index]
+
+            # Make note of excesses before swap.
+            total_excess_before_swap = (
+                excess_or_zero(excess_agent_excess)
+                + excess_or_zero(swap_agent_excess)
+            )
+
+            # Play out swap scenario and swap if excess is not increased.
+            is_shift = excess_agent_task_index == swap_task_index
+            if is_shift:
+                total_excess_after_swap = (
+                    (
+                        excess_or_zero(excess_agent_excess
+                                       - excess_agent_task_work)
+                    ) + (
+                        excess_or_zero(swap_agent_excess
+                                       + swap_task_work)
+                    )
+                )
+
+                if total_excess_after_swap <= total_excess_before_swap:
+                    self.assignments[excess_agent_task_index] = swap_agent
+                    self._clear_aggregate_info()
+
+            else:
+                total_excess_after_swap = (
+                    excess_or_zero(
+                        swap_agent_excess
+                        - swap_task_work
+                        + swap_agent.work_units[excess_agent_task_index]
+                    ) + excess_or_zero(
+                        excess_agent_excess
+                        - excess_agent_task_work
+                        + excess_agent.work_units[swap_task_index]
+                    )
+                )
+
+                if total_excess_after_swap <= total_excess_before_swap:
+                    a = self.assignments
+                    a[swap_task_index], a[excess_agent_task_index] = (
+                        a[excess_agent_task_index], a[swap_task_index])
+                    self._clear_aggregate_info()
+
+            excess_work_agents = self._get_agents_with_excess_work()

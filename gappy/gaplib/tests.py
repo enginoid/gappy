@@ -62,12 +62,12 @@ class SolutionTest(unittest.TestCase):
     def testCrossOver(self):
         g = self.goodAgent
         p = self.poorAgent
-        possible_assignments = {
-            (g, g),
-            (p, p),
-            (g, p),
-            (p, g),
-        }
+        possible_assignments = [
+            [g, g],
+            [p, p],
+            [g, p],
+            [p, g],
+        ]
 
         max_runs = 100
         runs = 0
@@ -95,7 +95,7 @@ class SolutionTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.goodAgentSolution.mutate(3)
 
-    #def testRepair(self):
-    #    repaired_solution = self.poorAgentSolution.repair()
-    #    self.assertEqual([self.poorAgent, self.goodAgent],
-    #                     list(repaired_solution.assignments))
+    def testRepair(self):
+        self.poorAgentSolution.repair()
+        self.assertEqual([self.poorAgent, self.goodAgent],
+                         self.poorAgentSolution.assignments)
