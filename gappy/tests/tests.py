@@ -1,5 +1,5 @@
 import unittest
-from gappy.ga import GeneticAlgorithm
+from ..ga import GeneticAlgorithm
 from os.path import dirname, join, abspath
 
 

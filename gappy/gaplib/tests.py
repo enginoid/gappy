@@ -1,5 +1,5 @@
 import unittest
-from gappy.gaplib.base import Agent, Solution
+from .base import Agent, Solution
 
 get_poor_agent = lambda: Agent(capacity=5, work_units=(5, 10), costs=(2, 6))
 get_good_agent = lambda: Agent(capacity=25, work_units=(10, 20), costs=(1, 3))

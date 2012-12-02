@@ -1,24 +1,37 @@
 from Queue import Queue
 import random
-from gappy.gaplib.base import Agent, Solution
+from gaplib.base import Agent, Solution
 
 
 class GeneticAlgorithm(object):
-    def __init__(self, agents):
+    def __init__(self, agents, fittest_found_callback=None):
         self.agents = agents
         self.solution_pool = []
+        self._fittest_individual = None
+        self._fittest_found_callback = fittest_found_callback
+        self.evaluations = 0
+
+    def add_solution(self, solution):
+        if self._fittest_individual:
+            if solution.total_cost > self._fittest_individual.total_cost:
+                self._fittest_individual = solution
+                self._fittest_found_callback(solution, self)
+        else:
+            self._fittest_individual = solution
+        self.solution_pool.append(solution)
+        self.evaluations += 1
 
     def generate_random_solutions(self, population_size):
         for _ in xrange(population_size):
             solution = Solution.generate_random(self.agents)
-            self.solution_pool.append(solution)
+            self.add_solution(solution)
 
     def double_population(self):
         for _ in xrange(len(self.solution_pool)):
             parent1 = random.choice(self.solution_pool)
             parent2 = random.choice(self.solution_pool)
             child = Solution.cross_over(parent1, parent2)
-            self.solution_pool.append(child)
+            self.add_solution(child)
 
     def halve_population(self):
         get_fitness = lambda sol: sol.total_cost
@@ -27,8 +40,12 @@ class GeneticAlgorithm(object):
         half_size = len(self.solution_pool) / 2
         self.solution_pool = self.solution_pool[:half_size]
 
+    def evolve_population(self):
+        self.double_population()
+        self.halve_population()
+
     @classmethod
-    def from_file(cls, file_obj):
+    def from_file(cls, file_obj, fittest_found_callback=None):
         lines_with_numbers = Queue()
         split_and_strip_ints = lambda line: [int(item.strip())
                                              for item in line.split()]
@@ -63,4 +80,5 @@ class GeneticAlgorithm(object):
             raise RuntimeError("Can't parse data file: unexpected data "
                                "present after parsing.")
 
-        return GeneticAlgorithm(agents)
+        return GeneticAlgorithm(agents,
+                                fittest_found_callback=fittest_found_callback)
