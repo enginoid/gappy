@@ -1,3 +1,4 @@
+from collections import namedtuple
 import random
 
 
@@ -18,16 +19,28 @@ class Solution(object):
     def __init__(self, agents, assignments):
         self.agents = agents
         self.assignments = assignments
-        self._agent_work_totals = None
+        self._agent_aggregate_info = None
 
-    def _get_agent_work_totals(self):
-        if self._agent_work_totals is None:
-            totals = dict.fromkeys(self.agents, 0)
+    def _get_agent_aggregate_info(self):
+        if self._agent_aggregate_info is None:
+            empty_aggregate_dict = lambda: {'work_total': 0,
+                                            'assignments': []}
+
+            aggregates = dict((agent, empty_aggregate_dict())
+                              for agent in self.agents)
+
             for i in xrange(len(self.assignments)):
                 agent = self.assignments[i]
-                totals[agent] += agent.work_units[i]
-            self._agent_work_totals = totals
-        return self._agent_work_totals
+                aggregates[agent]['work_total'] += agent.work_units[i]
+                aggregates[agent]['assignments'].append(i)
+
+            self._agent_aggregate_info = aggregates
+        return self._agent_aggregate_info
+
+    def _get_agents_with_excess_work(self):
+        for agent, aggregate_info in self._get_agent_aggregate_info().items():
+            if aggregate_info['work_total'] > agent.capacity:
+                yield agent
 
     @property
     def total_cost(self):
@@ -35,7 +48,7 @@ class Solution(object):
                    for i in xrange(len(self.assignments)))
 
     def get_total_agent_work(self, agent):
-        return self._get_agent_work_totals()[agent]
+        return self._get_agent_aggregate_info()[agent]['work_total']
 
     @classmethod
     def cross_over(self, parent1, parent2):

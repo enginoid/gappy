@@ -94,3 +94,8 @@ class SolutionTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.goodAgentSolution.mutate(3)
+
+    #def testRepair(self):
+    #    repaired_solution = self.poorAgentSolution.repair()
+    #    self.assertEqual([self.poorAgent, self.goodAgent],
+    #                     list(repaired_solution.assignments))
