@@ -16,6 +16,13 @@ class AgentTest(unittest.TestCase):
         self.assertEqual(self.poorAgent.work_units[1], 10)
         self.assertEqual(self.poorAgent.costs[1], 6)
 
+    def testWorkToCostRatio(self):
+        self.assertEqual(
+            (10 / 1.0), self.goodAgent.get_work_to_cost_ratio(0))
+
+        self.assertAlmostEqual(
+            (20 / 3.0), self.goodAgent.get_work_to_cost_ratio(1))
+
 
 class SolutionTest(unittest.TestCase):
 

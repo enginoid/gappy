@@ -7,6 +7,9 @@ class Agent(object):
         self.work_units = work_units
         self.costs = costs
 
+    def get_work_to_cost_ratio(self, task_index):
+        return float(self.work_units[task_index]) / self.costs[task_index]
+
 
 class Solution(object):
     def __init__(self, agents, assignments):
