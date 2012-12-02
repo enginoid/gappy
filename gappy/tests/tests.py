@@ -34,3 +34,8 @@ class TestGeneticAlgorithm(unittest.TestCase):
         self.ga.generate_random_solutions(100)
         self.ga.double_population()
         self.assertEqual(200, len(self.ga.solution_pool))
+
+    def testHalvePopulation(self):
+        self.ga.generate_random_solutions(100)
+        self.ga.halve_population()
+        self.assertEqual(50, len(self.ga.solution_pool))

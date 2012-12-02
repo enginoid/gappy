@@ -20,6 +20,13 @@ class GeneticAlgorithm(object):
             child = Solution.cross_over(parent1, parent2)
             self.solution_pool.append(child)
 
+    def halve_population(self):
+        get_fitness = lambda sol: sol.total_cost
+        self.solution_pool.sort(key=get_fitness)
+
+        half_size = len(self.solution_pool) / 2
+        self.solution_pool = self.solution_pool[:half_size]
+
     @classmethod
     def from_file(cls, file_obj):
         lines_with_numbers = Queue()
