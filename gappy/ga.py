@@ -1,10 +1,16 @@
 from Queue import Queue
-from gappy.gaplib.base import Agent
+from gappy.gaplib.base import Agent, Solution
 
 
 class GeneticAlgorithm(object):
     def __init__(self, agents):
         self.agents = agents
+        self.solution_pool = []
+
+    def generate_random_solutions(self, population_size):
+        for _ in xrange(population_size):
+            solution = Solution.generate_random(self.agents)
+            self.solution_pool.append(solution)
 
     @classmethod
     def from_file(cls, file_obj):

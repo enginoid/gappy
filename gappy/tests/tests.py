@@ -23,3 +23,9 @@ class TestGeneticAlgorithm(unittest.TestCase):
     def testFromInvalidFile(self):
         with self.assertRaises(RuntimeError):
             self.get_instance_by_filename('D3-15-corrupt.dat')
+
+    def testGenerateRandomSolutions(self):
+        ga = self.get_instance_by_filename('D3-15.dat')
+        ga.generate_random_solutions(100)
+        unique_solutions = set(tuple(s.assignments) for s in ga.solution_pool)
+        self.assertLess(1, len(set(unique_solutions)))
