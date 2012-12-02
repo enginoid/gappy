@@ -20,13 +20,20 @@ class AgentTest(unittest.TestCase):
 class SolutionTest(unittest.TestCase):
 
     def setUp(self):
-        agents = (get_good_agent(), get_poor_agent())
+        self.goodAgent = get_good_agent()
+        self.poorAgent = get_poor_agent()
+        self.agents = (self.goodAgent, self.poorAgent)
 
         self.poorAgentSolution = Solution(
-            agents=agents, assignments=(0, 0))
+            agents=self.agents, assignments=(self.poorAgent, self.poorAgent))
 
         self.goodAgentSolution = Solution(
-            agents=agents, assignments=(1, 1))
+            agents=self.agents, assignments=(self.goodAgent, self.goodAgent))
 
     def testConstruction(self):
-        self.assertEqual(self.goodAgentSolution.assignments[1], 1)
+        self.assertEqual(self.goodAgentSolution.assignments[1],
+                         self.goodAgent)
+
+    def testGetTotalCost(self):
+        self.assertEqual(self.goodAgentSolution.total_cost, 4)
+        self.assertEqual(self.poorAgentSolution.total_cost, 8)
