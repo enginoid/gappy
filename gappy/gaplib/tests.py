@@ -44,3 +44,27 @@ class SolutionTest(unittest.TestCase):
 
         self.assertEqual(
             self.goodAgentSolution.get_total_agent_work(self.poorAgent), 0)
+
+    def testCrossOver(self):
+        g = self.goodAgent
+        p = self.poorAgent
+        possible_assignments = {
+            (g, g),
+            (p, p),
+            (g, p),
+            (p, g),
+        }
+
+        max_runs = 100
+        runs = 0
+        while possible_assignments:
+            child = Solution.cross_over(self.poorAgentSolution,
+                                        self.goodAgentSolution)
+
+            if child.assignments in possible_assignments:
+                possible_assignments.remove(child.assignments)
+
+            runs += 1
+            if runs >= max_runs:
+                self.fail("Too many crossovers without finding all "
+                          "offspring.")

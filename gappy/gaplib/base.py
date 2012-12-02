@@ -1,3 +1,6 @@
+import random
+
+
 class Agent(object):
     def __init__(self, capacity, work_units, costs):
         self.capacity = capacity
@@ -19,3 +22,13 @@ class Solution(object):
         return sum(self.assignments[i].work_units[i]
                    for i in xrange(len(self.assignments))
                    if self.assignments[i] == agent)
+
+    @classmethod
+    def cross_over(self, parent1, parent2):
+        assert len(parent1.assignments) == len(parent2.assignments)
+
+        random_parent = lambda: random.choice((parent1, parent2))
+        assignments = tuple(random_parent().assignments[i]
+                            for i in xrange(len(parent1.assignments)))
+
+        return Solution(parent1.agents, assignments)
