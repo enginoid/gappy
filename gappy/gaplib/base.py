@@ -18,6 +18,16 @@ class Solution(object):
     def __init__(self, agents, assignments):
         self.agents = agents
         self.assignments = assignments
+        self._agent_work_totals = None
+
+    def _get_agent_work_totals(self):
+        if self._agent_work_totals is None:
+            totals = dict.fromkeys(self.agents, 0)
+            for i in xrange(len(self.assignments)):
+                agent = self.assignments[i]
+                totals[agent] += agent.work_units[i]
+            self._agent_work_totals = totals
+        return self._agent_work_totals
 
     @property
     def total_cost(self):
@@ -25,9 +35,7 @@ class Solution(object):
                    for i in xrange(len(self.assignments)))
 
     def get_total_agent_work(self, agent):
-        return sum(self.assignments[i].work_units[i]
-                   for i in xrange(len(self.assignments))
-                   if self.assignments[i] == agent)
+        return self._get_agent_work_totals()[agent]
 
     @classmethod
     def cross_over(self, parent1, parent2):
