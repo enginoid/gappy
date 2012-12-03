@@ -9,7 +9,7 @@ parser.add_argument('filename', metavar='filename', type=unicode,
 parser.add_argument('--population', metavar='population', type=int,
                     default=100, help='how large to keep population')
 parser.add_argument('--evaluations', metavar='evaluations', type=int,
-    default=10000, help='how many evaluations to run between restarts')
+    default=100000, help='how many evaluations to run between restarts')
 parser.add_argument('--restarts', metavar='restarts', type=int,
     default=10, help='how often to restart from a random point')
 
