@@ -8,63 +8,89 @@ class Agent(object):
         self.costs = costs
 
 
+class AgentAggregateInfo(object):
+    def __init__(self, agent, assignments, work_total, cost_total):
+        self.agent = agent
+        self.assignments = assignments
+        self.work_total = work_total
+        self.excess_work = work_total - agent.capacity
+        self.cost_total = cost_total
+
+    def add_assignment(self, index):
+        work_units = self.agent.work_units[index]
+        self.work_total += work_units
+        self.excess_work += work_units
+        self.cost_total += self.agent.costs[index]
+        self.assignments.append(index)
+
+    def remove_assignment(self, index):
+        work_units = self.agent.work_units[index]
+        self.work_total -= work_units
+        self.excess_work -= work_units
+        self.cost_total -= self.agent.costs[index]
+        self.assignments.remove(index)
+
+    @property
+    def has_excess_work(self):
+        return self.excess_work > 0
+
+
 class Solution(object):
     def __init__(self, agents, assignments):
         self.agents = agents
-        self.assignments = list(assignments)
-        self._agent_aggregate_info = None
+        self.assignments = assignments
+        self.assignment_count = len(assignments)
+        self._agent_aggregates = self._get_aggregate_info()
+        self._excess_work_agents = self._get_excess_work_agents()
 
-    def _clear_aggregate_info(self):
-        self._agent_aggregate_info = None
+    def _update_excess_status(self, agent_aggregate):
+        agent_set = {agent_aggregate.agent}
+        if agent_aggregate.has_excess_work:
+            self._excess_work_agents |= agent_set
+        else:
+            self._excess_work_agents -= agent_set
 
-    def _get_agent_aggregate_info(self):
-        if self._agent_aggregate_info is None:
-            empty_aggregate_dict = lambda: {'work_total': 0,
-                                            'assignments': []}
+    def _reassign(self, index, new_agent):
+        new_agent_agg = self._agent_aggregates[new_agent]
+        new_agent_agg.add_assignment(index)
+        self._update_excess_status(new_agent_agg)
 
-            aggregates = dict((agent, empty_aggregate_dict())
-                              for agent in self.agents)
+        old_agent = self.assignments[index]
+        old_agent_agg = self._agent_aggregates[old_agent]
+        old_agent_agg.remove_assignment(index)
+        self._update_excess_status(old_agent_agg)
 
-            for i in xrange(len(self.assignments)):
-                agent = self.assignments[i]
-                aggregates[agent]['work_total'] += agent.work_units[i]
-                aggregates[agent]['assignments'].append(i)
+        self.assignments[index] = new_agent
 
-            self._agent_aggregate_info = aggregates
-        return self._agent_aggregate_info
+    def _get_aggregate_info(self):
+        aggregates = {}
+        for agent in self.agents:
+            aggregates[agent] = AgentAggregateInfo(agent, [], 0, 0)
 
-    def _get_agent_excess_work(self, agent):
-        work_total = self._get_agent_aggregate_info()[agent]['work_total']
-        delta = work_total - agent.capacity
-        return delta
+        for i in xrange(self.assignment_count):
+            agent = self.assignments[i]
+            aggregates[agent].add_assignment(i)
 
-    def _get_agents_with_excess_work(self):
-        agents = []
-        for agent, aggregate_info in self._get_agent_aggregate_info().items():
-            if aggregate_info['work_total'] > agent.capacity:
-                agents.append(agent)
-        return agents
+        return aggregates
+
+    def _get_excess_work_agents(self):
+        return set(agg.agent for agg in self._agent_aggregates.values()
+                   if agg.has_excess_work)
 
     @property
     def total_cost(self):
-        return sum(self.assignments[i].costs[i]
-                   for i in xrange(len(self.assignments)))
-
-    def get_total_agent_work(self, agent):
-        return self._get_agent_aggregate_info()[agent]['work_total']
+        return sum(agg.cost_total for agg in self._agent_aggregates.values())
 
     @classmethod
     def cross_over(self, parent1, parent2):
-        assert len(parent1.assignments) == len(parent2.assignments)
-
         random_parent = lambda: random.choice((parent1, parent2))
-        assignments = tuple(random_parent().assignments[i]
-                            for i in xrange(len(parent1.assignments)))
+        assignments = [random_parent().assignments[i]
+                       for i in xrange(parent1.assignment_count)]
 
         return Solution(parent1.agents, assignments)
 
     def mutate(self, mutations):
-        if mutations > len(self.assignments):
+        if mutations > self.assignment_count:
             raise ValueError("More mutations specified than there are "
                              "chromosomes to mutate.")
 
@@ -72,7 +98,7 @@ class Solution(object):
         random_agent = lambda: random.choice(self.agents)
 
         new_assignments = list(a for a in self.assignments)
-        max_index = len(new_assignments) - 1
+        max_index = self.assignment_count - 1
         for _ in xrange(mutations):
             while True:
                 index = random.randint(0, max_index)
@@ -88,32 +114,31 @@ class Solution(object):
 
     @property
     def satisfies_constraint(self):
-        return not self._get_agents_with_excess_work()
+        return not self._excess_work_agents
 
     def repair(self):
         excess_or_zero = lambda delta: delta if delta > 0 else 0
-        excess_work_agents = self._get_agents_with_excess_work()
-        while excess_work_agents:
+        while self._excess_work_agents:
             # Find a random excess agent.
-            excess_agent = random.choice(excess_work_agents)
+            excess_agent = random.sample(self._excess_work_agents, 1)[0]
 
             # Find a random task for that agent.
-            excess_agent_info = self._get_agent_aggregate_info()[excess_agent]
-            excess_agent_task_indices = excess_agent_info['assignments']
-            excess_agent_task_index = random.choice(excess_agent_task_indices)
-            excess_agent_task_work = (excess_agent
-                                      .work_units[excess_agent_task_index])
-            excess_agent_excess = self._get_agent_excess_work(excess_agent)
+            excess_agent_aggregate = self._agent_aggregates[excess_agent]
+            excess_agent_task_index = random.choice(
+                excess_agent_aggregate.assignments)
+
+            excess_agent_task_work = (
+                excess_agent.work_units[excess_agent_task_index])
 
             # Create a random swap scenario.
             swap_agent = random.choice(self.agents)
-            swap_agent_excess = self._get_agent_excess_work(swap_agent)
-            swap_task_index = random.choice(xrange(len(self.assignments)))
+            swap_agent_excess = self._agent_aggregates[swap_agent].excess_work
+            swap_task_index = random.choice(xrange(self.assignment_count))
             swap_task_work = swap_agent.work_units[swap_task_index]
 
             # Make note of excesses before swap.
             total_excess_before_swap = (
-                excess_or_zero(excess_agent_excess)
+                excess_or_zero(excess_agent_aggregate.excess_work)
                 + excess_or_zero(swap_agent_excess)
             )
 
@@ -122,7 +147,7 @@ class Solution(object):
             if is_shift:
                 total_excess_after_swap = (
                     (
-                        excess_or_zero(excess_agent_excess
+                        excess_or_zero(excess_agent_aggregate.excess_work
                                        - excess_agent_task_work)
                     ) + (
                         excess_or_zero(swap_agent_excess
@@ -130,9 +155,8 @@ class Solution(object):
                     )
                 )
 
-                if total_excess_after_swap <= total_excess_before_swap:
-                    self.assignments[excess_agent_task_index] = swap_agent
-                    self._clear_aggregate_info()
+                if total_excess_after_swap < total_excess_before_swap:
+                    self._reassign(excess_agent_task_index, swap_agent)
 
             else:
                 total_excess_after_swap = (
@@ -141,19 +165,15 @@ class Solution(object):
                         - swap_task_work
                         + swap_agent.work_units[excess_agent_task_index]
                     ) + excess_or_zero(
-                        excess_agent_excess
+                        excess_agent_aggregate.excess_work
                         - excess_agent_task_work
                         + excess_agent.work_units[swap_task_index]
                     )
                 )
 
-                if total_excess_after_swap <= total_excess_before_swap:
-                    a = self.assignments
-                    a[swap_task_index], a[excess_agent_task_index] = (
-                        a[excess_agent_task_index], a[swap_task_index])
-                    self._clear_aggregate_info()
-
-            excess_work_agents = self._get_agents_with_excess_work()
+                if total_excess_after_swap < total_excess_before_swap:
+                    self._reassign(swap_task_index, excess_agent)
+                    self._reassign(excess_agent_task_index, swap_agent)
 
     @classmethod
     def generate_random(cls, agents):

@@ -17,7 +17,8 @@ class GeneticAlgorithm(object):
             if solution.total_cost < self._fittest_individual.total_cost:
                 self._fittest_individual = solution
                 self.evaluations_to_fittest = self.evaluations
-                self._fittest_found_callback(solution, self)
+                if self._fittest_found_callback:
+                    self._fittest_found_callback(solution, self)
         else:
             self._fittest_individual = solution
         self.solution_pool.append(solution)
