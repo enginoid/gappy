@@ -9,12 +9,14 @@ class GeneticAlgorithm(object):
         self.solution_pool = []
         self._fittest_individual = None
         self._fittest_found_callback = fittest_found_callback
+        self.evaluations_to_fittest = None
         self.evaluations = 0
 
     def add_solution(self, solution):
         if self._fittest_individual:
-            if solution.total_cost > self._fittest_individual.total_cost:
+            if solution.total_cost < self._fittest_individual.total_cost:
                 self._fittest_individual = solution
+                self.evaluations_to_fittest = self.evaluations
                 self._fittest_found_callback(solution, self)
         else:
             self._fittest_individual = solution
@@ -31,6 +33,10 @@ class GeneticAlgorithm(object):
             parent1 = random.choice(self.solution_pool)
             parent2 = random.choice(self.solution_pool)
             child = Solution.cross_over(parent1, parent2)
+            should_mutate = random.random() < (1.0 / len(self.solution_pool))
+            if should_mutate:
+                child.mutate(1)
+            child.repair()
             self.add_solution(child)
 
     def halve_population(self):
