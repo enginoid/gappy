@@ -85,3 +85,6 @@ def main():
 
         best_solution = sorted(ga.solution_pool, key=lambda s: s.total_cost)[0]
         fittest_found_callback(best_solution, ga)
+
+if __name__ == "__main__":
+    main()
