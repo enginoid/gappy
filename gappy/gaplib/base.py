@@ -3,15 +3,9 @@ import random
 
 class Agent(object):
     def __init__(self, capacity, work_units, costs):
-        if (0 in work_units) or (0 in costs):
-            raise ValueError("Task costs or work units can't be zero.")
-
         self.capacity = capacity
         self.work_units = work_units
         self.costs = costs
-
-    def get_work_to_cost_ratio(self, task_index):
-        return float(self.work_units[task_index]) / self.costs[task_index]
 
 
 class Solution(object):
