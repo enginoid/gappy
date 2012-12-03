@@ -46,10 +46,6 @@ class Solution(object):
         return agents
 
     @property
-    def assignment(self):
-        return self._assignments
-
-    @property
     def total_cost(self):
         return sum(self.assignments[i].costs[i]
                    for i in xrange(len(self.assignments)))
